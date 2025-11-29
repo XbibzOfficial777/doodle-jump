@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doodle Jump: Gabut 🗿</title>
+    <link rel="icon" type="image/svg+xml" href="media/doodle-roket.png">	
+    <meta name="description" content="Doodle Jump gabut gw buat 🗿">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<!-- 
+Hai, Kenalin Gua Xbibz Official 
+Gua suka maen epep 🗿 
+-->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap');
+
+        :root {
+            --bg-dark: #0a0a12;
+            --accent: #ffd700;
+            --danger: #ff4757;
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            background: #000;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        @media (min-width: 501px) {
+            #game-container {
+                height: 90vh;
+                border-radius: 20px;
+                border: 2px solid #333;
+            }
+        }
+
+        .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        #bg-layer {
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            opacity: 0.8;
+            transition: background-image 1s ease;
+        }
+
+        #game-world { z-index: 10; }
+        #ui-layer { z-index: 50; pointer-events: none; }
+
+        
+        .entity {
+            position: absolute;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+            will-change: transform;
+        }
+
+        .platform {
+            background-color: #76dbd1;
+            border-radius: 8px;
+            border-top: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        
+        #controls-area {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            z-index: 60;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            pointer-events: auto; /* Bisa diklik */
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2rem;
+            transition: all 0.1s;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:active, .control-btn.pressed {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: var(--accent);
+            transform: scale(0.9);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        
+        #hud {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .hud-chip {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .hp-track {
+            width: 100px; height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px; overflow: hidden;
+        }
+        .hp-fill {
+            width: 100%; height: 100%;
+            background: var(--danger);
+            transition: width 0.3s ease;
+        }
+
+        
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a12;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+        .screen.hidden { opacity: 0; pointer-events: none; }
+
+        .btn-play {
+            background: linear-gradient(45deg, #ff9f43, #ff6b6b);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
+            margin-top: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-play:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="bg-layer" class="layer"></div>
+        <div id="game-world" class="layer"></div>
+
+        <!-- HUD -->
+        <div id="ui-layer" class="layer">
+            <div id="hud" style="display: none;">
+                <div class="hud-chip">
+                    <img src="media/score.gif" style="height: 24px;">
+                    <span id="score-text">0</span>
+                </div>
+                <div class="hud-chip">
+                    <i class="fas fa-heart" style="color: #ff4757;"></i>
+                    <div class="hp-track"><div id="hp-bar" class="hp-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="controls-area" style="display: none;">
+            <div class="control-btn" id="btn-left">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <div class="control-btn" id="btn-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+
+        
+        <div id="loading-screen" class="screen">
+            <img src="media/loading-fullscreen.gif" style="width: 100px; height: 100px; object-fit: contain;">
+            <p style="margin-top: 20px; color: #aaa; letter-spacing: 1px;">MEMPERSIAPKAN ROKET...</p>
+        </div>
+
+        
+        <div id="start-screen" class="screen hidden" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+            <img src="media/doodle-roket.png" style="width: 120px; animation: bounce 2s infinite;">
+            <h1 style="font-size: 3rem; color: #ffd700; text-shadow: 0 0 15px rgba(255,215,0,0.5); text-align: center; line-height: 1;">DOODLE<br>JUMP</h1>
+            <button class="btn-play" onclick="App.start()">MULAI <i class="fas fa-rocket"></i></button>
+        </div>
+
+        
+        <div id="game-over-screen" class="screen hidden" style="background: rgba(20,0,0,0.9);">
+            <h1 style="color: #ff4757; font-size: 3.5rem;">MAMPUS JATUH</h1>
+            <p style="color: #ddd;">Skor Terakhir Kamu:</p>
+            <h2 id="final-score" style="font-size: 4rem; color: white; margin: 10px 0;">0</h2>
+            <button class="btn-play" onclick="App.reset()">COBA LAGI <i class="fas fa-redo"></i></button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         Doodle Jump By Xbibz Official
+         */
+
+        const ASSETS = {
+            images: {},
+            list: [
+                'media/doodle-a.png', 'media/doodle-b.png', 'media/doodle-ninja.png', 'media/doodle-perban.png',
+                'media/doodle-roket.png', 'media/koin.gif', 'media/kena-coin.gif',
+                'media/pesawat.gif', 'media/ledakan.gif', 'media/score.gif',
+                'media/background1.gif', 'media/background2.gif', 'media/loading-fullscreen.gif'
+            ]
+        };
+
+        const AudioSystem = {
+            init: async () => {
+                await Tone.start();
+                AudioSystem.jump = new Tone.PolySynth(Tone.Synth, { volume: -8 }).toDestination();
+                AudioSystem.coin = new Tone.MembraneSynth({ volume: -5 }).toDestination();
+                AudioSystem.boom = new Tone.NoiseSynth({ volume: -5 }).toDestination();
+            },
+            playJump: () => AudioSystem.jump?.triggerAttackRelease("C4", "16n"),
+            playCoin: () => AudioSystem.coin?.triggerAttackRelease("G5", "32n"),
+            playBoom: () => AudioSystem.boom?.triggerAttackRelease("8n")
+        };
+
+        class GameEngine {
+            constructor() {
+                
+                this.GRAVITY = 0.2;     
+                this.JUMP_FORCE = -7.5; 
+                this.SPEED = 4;         
+                this.MAX_HP = 400;
+
+                this.container = document.getElementById('game-world');
+                this.width = this.container.clientWidth;
+                this.height = this.container.clientHeight;
+                
+                this.state = {
+                    playing: false,
+                    score: 0,
+                    hp: this.MAX_HP,
+                    doodle: { x: 0, y: 0, vy: 0, el: null, faceRight: true },
+                    platforms: [],
+                    items: [],
+                    cameraY: 0
+                };
+
+                this.input = { left: false, right: false };
+                this.loopId = null;
+                
+                this.setupControls();
+            }
+
+            setupControls() {
+                
+                window.addEventListener('keydown', e => {
+                    if(e.key === 'ArrowLeft') { this.input.left = true; this.animateBtn('left', true); }
+                    if(e.key === 'ArrowRight') { this.input.right = true; this.animateBtn('right', true); }
+                });
+                window.addEventListener('keyup', e => {
+                    if(e.key === 'ArrowLeft') { this.input.left = false; this.animateBtn('left', false); }
+                    if(e.key === 'ArrowRight') { this.input.right = false; this.animateBtn('right', false); }
+                });
+
+                
+                const bindBtn = (id, dir) => {
+                    const btn = document.getElementById(id);
+                    const start = (e) => { e.preventDefault(); this.input[dir] = true; btn.classList.add('pressed'); };
+                    const end = (e) => { e.preventDefault(); this.input[dir] = false; btn.classList.remove('pressed'); };
+                    
+                    btn.addEventListener('touchstart', start);
+                    btn.addEventListener('touchend', end);
+                    btn.addEventListener('mousedown', start);
+                    btn.addEventListener('mouseup', end);
+                    btn.addEventListener('mouseleave', end);
+                };
+
+                bindBtn('btn-left', 'left');
+                bindBtn('btn-right', 'right');
+            }
+
+            animateBtn(dir, active) {
+                const btn = document.getElementById(dir === 'left' ? 'btn-left' : 'btn-right');
+                if(active) btn.classList.add('pressed'); else btn.classList.remove('pressed');
+            }
+
+            run() {
+                this.resetState();
+                this.spawnDoodle();
+                this.spawnInitialPlatforms();
+                
+                
+                const bg = Math.random() > 0.5 ? 'media/background1.gif' : 'media/background2.gif';
+                document.getElementById('bg-layer').style.backgroundImage = `url('${bg}')`;
+
+                this.state.playing = true;
+                this.loop();
+            }
+
+            resetState() {
+                this.container.innerHTML = '';
+                this.state.score = 0;
+                this.state.hp = this.MAX_HP;
+                this.state.platforms = [];
+                this.state.items = [];
+                this.state.cameraY = 0;
+                this.updateUI();
+            }
+
+            spawnDoodle() {
+                const el = document.createElement('div');
+                el.className = 'entity';
+                el.style.width = '60px'; el.style.height = '60px';
+                const skins = ['media/doodle-a.png', 'media/doodle-b.png', 'media/doodle-ninja.png', 'media/doodle-perban.png'];
+                el.style.backgroundImage = `url('${skins[Math.floor(Math.random()*skins.length)]}')`;
+                el.style.zIndex = 20;
+                this.container.appendChild(el);
+                
+                this.state.doodle = { 
+                    x: this.width/2 - 30, 
+                    y: this.height - 150, 
+                    vy: this.JUMP_FORCE, 
+                    el: el, 
+                    faceRight: true 
+                };
+            }
+
+            spawnInitialPlatforms() {
+                let y = this.height;
+                while(y > -50) {
+                    this.addPlatform(y);
+                    y -= 90; // Jarak antar platform sedikit dirapatkan
+                }
+            }
+
+            addPlatform(y) {
+                const w = 70; 
+                const x = Math.random() * (this.width - w);
+                const el = document.createElement('div');
+                el.className = 'entity platform';
+                el.style.width = `${w}px`; el.style.height = '18px';
+                this.container.appendChild(el);
+                
+                this.state.platforms.push({ el, x, y, w, h: 18 });
+                if(Math.random() < 0.25) this.addItem(x, y - 50);
+            }
+
+            addItem(px, py) {
+                const isEnemy = Math.random() < 0.3; // 30% Enemy
+                const type = isEnemy ? 'enemy' : 'coin';
+                const w = isEnemy ? 50 : 30;
+                const h = isEnemy ? 40 : 30;
+                const src = isEnemy ? 'media/pesawat.gif' : 'media/koin.gif';
+
+                const el = document.createElement('div');
+                el.className = 'entity';
+                el.style.width = `${w}px`; el.style.height = `${h}px`;
+                el.style.backgroundImage = `url('${src}')`;
+                
+                
+                const x = px + (70 - w)/2; 
+                this.container.appendChild(el);
+                this.state.items.push({ el, x, y: py, w, h, type, active: true });
+            }
+
+            update() {
+                const s = this.state;
+                const d = s.doodle;
+
+                // 1. Movement X
+                if (this.input.left) { d.x -= this.SPEED; d.faceRight = false; }
+                if (this.input.right) { d.x += this.SPEED; d.faceRight = true; }
+                
+                // Screen Wrap
+                if(d.x < -30) d.x = this.width;
+                if(d.x > this.width) d.x = -30;
+
+                // 2. Physics Y (Gravity)
+                d.vy += this.GRAVITY;
+                d.y += d.vy;
+
+                if (d.vy > 0) {
+                    s.platforms.forEach(p => {
+                        if (d.x + 40 > p.x && d.x + 20 < p.x + p.w &&
+                            d.y + 60 > p.y && d.y + 60 < p.y + 20) {
+                            d.vy = this.JUMP_FORCE;
+                            AudioSystem.playJump();
+                        }
+                    });
+                }
+
+                
+                if (d.y < this.height / 2) {
+                    const diff = (this.height / 2) - d.y;
+                    d.y = this.height / 2;
+                    s.cameraY += diff;
+                    s.score += Math.floor(diff/2);
+                    
+                    // Move World Elements
+                    s.platforms.forEach(p => p.y += diff);
+                    s.items.forEach(i => i.y += diff);
+                    
+                    
+                    document.getElementById('bg-layer').style.backgroundPositionY = `${s.cameraY * 0.3}px`;
+
+                    
+                    s.platforms = s.platforms.filter(p => {
+                        if(p.y > this.height) { p.el.remove(); return false; }
+                        return true;
+                    });
+                    
+                    const highest = s.platforms[s.platforms.length-1];
+                    if(highest && highest.y > 100) this.addPlatform(highest.y - 100 - (Math.random()*30));
+                }
+
+                
+                s.items.forEach(i => {
+                    if(!i.active) return;
+                    
+                    i.el.style.transform = `translate(${i.x}px, ${i.y}px)`;
+
+                    
+                    if (d.x < i.x + i.w && d.x + 50 > i.x &&
+                        d.y < i.y + i.h && d.y + 50 > i.y) {
+                        
+                        if(i.type === 'coin') {
+                            AudioSystem.playCoin();
+                            s.score += 500;
+                            i.active = false;
+                            i.el.style.backgroundImage = "url('media/kena-coin.gif')";
+                            setTimeout(() => i.el.remove(), 400);
+                        } else if(i.type === 'enemy') {
+                            AudioSystem.playBoom();
+                            s.hp -= 100;
+                            this.updateUI();
+                            
+                            i.active = false;
+                            i.el.style.backgroundImage = "url('media/ledakan.gif')";
+                            i.el.style.width = '80px'; i.el.style.height = '80px';
+                            i.el.style.transform = `translate(${i.x-20}px, ${i.y-20}px)`;
+                            
+                            d.vy = 5; // Bounce off enemy
+                            if(s.hp <= 0) this.gameOver();
+                            setTimeout(() => i.el.remove(), 500);
+                        }
+                    }
+                    
+                    if(i.y > this.height) { i.el.remove(); i.active = false; }
+                });
+
+                
+                if (d.y > this.height) this.gameOver();
+
+                
+                d.el.style.transform = `translate(${d.x}px, ${d.y}px) scaleX(${d.faceRight?1:-1})`;
+                s.platforms.forEach(p => p.el.style.transform = `translate(${p.x}px, ${p.y}px)`);
+                document.getElementById('score-text').innerText = s.score;
+            }
+
+            updateUI() {
+                const pct = Math.max(0, (this.state.hp / this.MAX_HP) * 100);
+                document.getElementById('hp-bar').style.width = `${pct}%`;
+            }
+
+            gameOver() {
+                this.state.playing = false;
+                cancelAnimationFrame(this.loopId);
+                document.getElementById('controls-area').style.display = 'none';
+                document.getElementById('hud').style.display = 'none';
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = this.state.score;
+            }
+
+            loop() {
+                if(!this.state.playing) return;
+                this.update();
+                this.loopId = requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        const App = {
+            game: null,
+            init: () => {
+                let loaded = 0;
+                
+                ASSETS.list.forEach(src => {
+                    const img = new Image();
+                    img.src = src;
+                    img.onload = () => {
+                        loaded++;
+                        if(loaded === ASSETS.list.length) {
+                            setTimeout(() => {
+                                document.getElementById('loading-screen').classList.add('hidden');
+                                document.getElementById('start-screen').classList.remove('hidden');
+                            }, 800);
+                        }
+                    }
+                    img.onerror = () => { loaded++; } // Continue anyway
+                });
+                App.game = new GameEngine();
+            },
+            start: async () => {
+                await AudioSystem.init();
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.add('hidden');
+                document.getElementById('hud').style.display = 'flex';
+                document.getElementById('controls-area').style.display = 'flex';
+                App.game.run();
+            },
+            reset: () => {
+                App.start();
+            }
+        };
+
+        window.onload = App.init;
+
+    </script>
+</body>
+</html>
+
+
